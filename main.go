@@ -357,7 +357,7 @@ func launchWorkers(workers int, wg *sync.WaitGroup, rc <-chan repo) {
 }
 
 func main() {
-	conf := flag.String("config", "examples/simple.yaml", "Config file to start the application with")
+	conf := flag.String("config", "config.yaml", "Config file to start the application with")
 	workers := flag.Int("workers", 1, "The number of workers trying to update repos")
 	oneshot := flag.Bool("oneshot", false, "Only run the script once and then exit upon completion")
 
