@@ -1,0 +1,28 @@
+---
+interval: 3600
+path: /tmp/test_repo
+repos:
+- url: https://github.com/michaeljs1990/val.git
+  type: fetch_mirror
+  path: /tmp/test_repo/val_test
+  refs:
+  - refs/tags/*:refs/remotes/tags/*
+  metadata:
+  - cgit
+- url: https://github.com/michaeljs1990/val.git
+  type: github_push_mirror
+  path: /tmp/test_repo/push_val
+  githubauth:
+    user: michaeljs1990
+    token: pass
+  refs:
+  - refs/tags/*:refs/remotes/tags/*
+github:
+- username: michaeljs1990
+  githubauth:
+    user: michaeljs1990
+    token: pass
+  repos: true
+  repotype: all
+  metadata:
+  - cgit

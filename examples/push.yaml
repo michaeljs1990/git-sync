@@ -1,0 +1,12 @@
+---
+interval: 3600
+path: /tmp/test_repo
+repos:
+- url: https://github.com/michaeljs1990/val.git
+  type: github_push_mirror
+  path: /tmp/test_repo/push_val
+  githubauth:
+    user: michaeljs1990
+    token: pass
+  refs:
+  - 'refs/heads/*:refs/remotes/heads/*'
