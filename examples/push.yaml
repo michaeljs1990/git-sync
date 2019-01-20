@@ -5,7 +5,7 @@ repos:
 - url: https://github.com/michaeljs1990/val.git
   type: github_push_mirror
   path: /tmp/test_repo/push_val
-  githubauth:
+  httpauth:
     user: michaeljs1990
     token: pass
   remote: github_mirror

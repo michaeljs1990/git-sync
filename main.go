@@ -44,13 +44,13 @@ type Config struct {
 // RepoConfig is for adhoc servers that may not live
 // in a place with a common api such as the linux kernel
 type RepoConfig struct {
-	URL        string
-	Type       string
-	Path       string
-	Remote     string
-	Refs       []string
-	Metadata   []string
-	GithubAuth GithubAuth
+	URL      string
+	Type     string
+	Path     string
+	Remote   string
+	Refs     []string
+	Metadata []string
+	HTTPAuth HTTPAuth
 }
 
 // GithubConfig holds a single github user and will pull down all
@@ -58,14 +58,14 @@ type RepoConfig struct {
 // github has some strict rate limiting and they shouldn't change
 // often in reality.
 type GithubConfig struct {
-	Username   string
-	RepoType   string
-	Repos      bool
-	Metadata   []string
-	GithubAuth GithubAuth
+	Username string
+	RepoType string
+	Repos    bool
+	Metadata []string
+	HTTPAuth HTTPAuth
 }
 
-type GithubAuth struct {
+type HTTPAuth struct {
 	User  string
 	Token string
 }
@@ -74,29 +74,29 @@ type GithubAuth struct {
 // all cases however repo is what all other configs must conform
 // to for being processed
 type repo struct {
-	URL        string
-	Type       string
-	Path       string
-	Remote     string
-	Refs       []string
-	Metadata   []string
-	GithubAuth GithubAuth
+	URL      string
+	Type     string
+	Path     string
+	Remote   string
+	Refs     []string
+	Metadata []string
+	HTTPAuth HTTPAuth
 }
 
 func (r RepoConfig) toRepo(c Config) repo {
 	return repo{
-		URL:        r.URL,
-		Refs:       r.Refs,
-		Type:       r.Type,
-		Path:       r.Path,
-		Remote:     r.Remote,
-		Metadata:   r.Metadata,
-		GithubAuth: r.GithubAuth,
+		URL:      r.URL,
+		Refs:     r.Refs,
+		Type:     r.Type,
+		Path:     r.Path,
+		Remote:   r.Remote,
+		Metadata: r.Metadata,
+		HTTPAuth: r.HTTPAuth,
 	}
 }
 
 func (r GithubConfig) toRepos(c Config) []repo {
-	oauth, _ := makeGithubClient(r.GithubAuth)
+	oauth, _ := makeGithubClient(r.HTTPAuth)
 	client := github.NewClient(oauth)
 
 	// If the user has not set the repo type provide a sane default
@@ -116,12 +116,12 @@ func (r GithubConfig) toRepos(c Config) []repo {
 		// only HTTP/HTTPS clones are. In addition to this we need to do sanity checking
 		// such as not passing SSH auth info to HTTP methods and so on.
 		ret = append(ret, repo{
-			URL:        *v.HTMLURL,
-			Type:       FetchMirror,
-			Path:       path.Join(c.Path, *v.FullName),
-			Remote:     "origin",
-			Metadata:   r.Metadata,
-			GithubAuth: r.GithubAuth,
+			URL:      *v.HTMLURL,
+			Type:     FetchMirror,
+			Path:     path.Join(c.Path, *v.FullName),
+			Remote:   "origin",
+			Metadata: r.Metadata,
+			HTTPAuth: r.HTTPAuth,
 		})
 	}
 
@@ -134,10 +134,10 @@ func (r GithubConfig) toRepos(c Config) []repo {
 // empty one.
 func (r repo) getAuth() gittrans.AuthMethod {
 	switch {
-	case r.GithubAuth != (GithubAuth{}):
+	case r.HTTPAuth != (HTTPAuth{}):
 		return &githttp.BasicAuth{
-			Username: r.GithubAuth.User,
-			Password: r.GithubAuth.Token,
+			Username: r.HTTPAuth.User,
+			Password: r.HTTPAuth.Token,
 		}
 	default:
 		var emptyAuth gittrans.AuthMethod
@@ -147,7 +147,7 @@ func (r repo) getAuth() gittrans.AuthMethod {
 
 // Check if the current repo is able to create a github client and
 // return one if it's able to do so.
-func makeGithubClient(ga GithubAuth) (*http.Client, error) {
+func makeGithubClient(ga HTTPAuth) (*http.Client, error) {
 	if ga.Token == "" {
 		return nil, NoGithubConfigFound
 	}

@@ -39,13 +39,13 @@ repos:
 - url: https://github.com/michaeljs1990/git-sync.git
   type: github_push_mirror
   path: /var/lib/repos/git-sync
-  githubauth:
+  httpauth:
     user: username
     token: sometoken
   remote: github_mirror
 github:
 - username: michaeljs1990
-  githubauth:
+  httpauth:
     user: username
     token: sometoken
   repos: true
