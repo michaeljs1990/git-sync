@@ -22,6 +22,9 @@ well with some features but it's at your own risk.
 |SSH private key auth                  |    |     |X      |       |
 |Pull repo over SSH protocol           |    |     |X      |       |
 |Config validation                     |    |     |X      |       |
+|Prometheus metrics                    |    |     |X      |       |
+|Hot config reloading                  |    |     |X      |       |
+|Force syncing without process restart |    |     |X      |       |
 
 ## Config
 
