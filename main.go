@@ -276,8 +276,8 @@ func syncToGithub(r repo) error {
 			refspec = append(refspec, gconfig.RefSpec(ref))
 		}
 	} else {
-		refspec = append(refspec, gconfig.RefSpec("refs/heads/*:refs/remotes/heads/*"))
-		refspec = append(refspec, gconfig.RefSpec("refs/tags/*:refs/remotes/tags/*"))
+		refspec = append(refspec, gconfig.RefSpec("refs/heads/*:refs/heads/*"))
+		refspec = append(refspec, gconfig.RefSpec("refs/tags/*:refs/tags/*"))
 	}
 
 	// Ensure the remote exists that we want to be syncing to
