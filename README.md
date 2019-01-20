@@ -48,6 +48,7 @@ github:
   httpauth:
     user: username
     token: sometoken
+  protocol: http
   repos: true
 ```
 

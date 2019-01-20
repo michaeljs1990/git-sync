@@ -61,6 +61,7 @@ type GithubConfig struct {
 	Username string
 	RepoType string
 	Repos    bool
+	Protocol string
 	Metadata []string
 	HTTPAuth HTTPAuth
 }
@@ -112,11 +113,29 @@ func (r GithubConfig) toRepos(c Config) []repo {
 	repos, _, _ := client.Repositories.List(context.Background(), r.Username, opt)
 
 	for _, v := range repos {
+		// Pick the type of protocol that we are going to use to clone over if none is
+		// provided we just clone over HTTP. Github also supports SVN clone but adding
+		// support for SVN/Mg is a fairly large change.
+		var url string
+		switch r.Protocol {
+		case "git":
+			url = *v.GitURL
+		case "http":
+			url = *v.HTMLURL
+		case "ssh":
+			url = *v.SSHURL
+		case "":
+			url = *v.HTMLURL
+		default:
+			log.Error("The protocol you provided for github is not supported")
+			os.Exit(1)
+		}
+
 		// Need to add support here for using different kinds of urls but currently
 		// only HTTP/HTTPS clones are. In addition to this we need to do sanity checking
 		// such as not passing SSH auth info to HTTP methods and so on.
 		ret = append(ret, repo{
-			URL:      *v.HTMLURL,
+			URL:      url,
 			Type:     FetchMirror,
 			Path:     path.Join(c.Path, *v.FullName),
 			Remote:   "origin",

@@ -24,6 +24,7 @@ github:
     user: michaeljs1990
     token: pass
   repos: true
+  protocol: http
   repotype: all
   metadata:
   - cgit
