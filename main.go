@@ -228,10 +228,7 @@ func syncRepo(r repo) error {
 	}
 
 	// This is a little silly since if it's up to date it still returns
-	// that information via an error message. We are only going to update
-	// origin for right. Maybe in the future discover all remotes and iterate
-	// over them. Also maybe let users pass in refspecs in the future right now
-	// we just update anything.
+	// that information via an error message.
 	err = wc.Fetch(&git.FetchOptions{
 		RemoteName: r.Remote,
 		Progress:   wl,
