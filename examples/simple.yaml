@@ -15,6 +15,7 @@ repos:
   githubauth:
     user: michaeljs1990
     token: pass
+  remote: github_push_mirror
   refs:
   - refs/tags/*:refs/remotes/tags/*
 github:

@@ -47,6 +47,7 @@ type RepoConfig struct {
 	URL        string
 	Type       string
 	Path       string
+	Remote     string
 	Refs       []string
 	Metadata   []string
 	GithubAuth GithubAuth
@@ -76,6 +77,7 @@ type repo struct {
 	URL        string
 	Type       string
 	Path       string
+	Remote     string
 	Refs       []string
 	Metadata   []string
 	GithubAuth GithubAuth
@@ -87,6 +89,7 @@ func (r RepoConfig) toRepo(c Config) repo {
 		Refs:       r.Refs,
 		Type:       r.Type,
 		Path:       r.Path,
+		Remote:     r.Remote,
 		Metadata:   r.Metadata,
 		GithubAuth: r.GithubAuth,
 	}
@@ -109,13 +112,14 @@ func (r GithubConfig) toRepos(c Config) []repo {
 	repos, _, _ := client.Repositories.List(context.Background(), r.Username, opt)
 
 	for _, v := range repos {
-    // Need to add support here for using different kinds of urls but currently
-    // only HTTP/HTTPS clones are. In addition to this we need to do sanity checking
-    // such as not passing SSH auth info to HTTP methods and so on.
+		// Need to add support here for using different kinds of urls but currently
+		// only HTTP/HTTPS clones are. In addition to this we need to do sanity checking
+		// such as not passing SSH auth info to HTTP methods and so on.
 		ret = append(ret, repo{
 			URL:        *v.HTMLURL,
 			Type:       FetchMirror,
 			Path:       path.Join(c.Path, *v.FullName),
+			Remote:     "origin",
 			Metadata:   r.Metadata,
 			GithubAuth: r.GithubAuth,
 		})
@@ -229,7 +233,7 @@ func syncRepo(r repo) error {
 	// over them. Also maybe let users pass in refspecs in the future right now
 	// we just update anything.
 	err = wc.Fetch(&git.FetchOptions{
-		RemoteName: "origin",
+		RemoteName: r.Remote,
 		Progress:   wl,
 		Force:      true,
 		RefSpecs:   refspec,
@@ -276,10 +280,16 @@ func syncToGithub(r repo) error {
 		refspec = append(refspec, gconfig.RefSpec("refs/tags/*:refs/remotes/tags/*"))
 	}
 
+	// Ensure the remote exists that we want to be syncing to
+	_, err = wc.CreateRemote(&gconfig.RemoteConfig{
+		Name: r.Remote,
+		URLs: []string{r.URL},
+	})
+
 	// This needs a username and password or better yet a username and auth token.
 	// In the case of an auth token the username can actually be anything that you want.
 	err = wc.Push(&git.PushOptions{
-		RemoteName: "origin",
+		RemoteName: r.Remote,
 		Auth:       r.getAuth(),
 		RefSpecs:   refspec,
 		Progress:   wl,

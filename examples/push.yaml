@@ -8,5 +8,6 @@ repos:
   githubauth:
     user: michaeljs1990
     token: pass
+  remote: github_mirror
   refs:
   - 'refs/heads/*:refs/remotes/heads/*'
