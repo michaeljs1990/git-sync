@@ -1,11 +1,5 @@
 let
   pkgs = import <nixpkgs> { };
-  godeps = pkgs.buildGoPackage rec {
-    name = "dep2nix";
-    goPackagePath = "src/test";
-    src = ./src/test;
-    goDeps = ./src/test/deps.nix;
-  };
 in
 
 pkgs.stdenv.mkDerivation {
@@ -16,8 +10,6 @@ pkgs.stdenv.mkDerivation {
 
   buildInputs = [ 
     pkgs.go
-    pkgs.dep
-    pkgs.dep2nix
   ];
 
   shellHook = ''
