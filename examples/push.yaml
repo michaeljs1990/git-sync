@@ -3,7 +3,7 @@ interval: 3600
 path: /tmp/test_repo
 repos:
 - url: https://github.com/michaeljs1990/val.git
-  type: github_push_mirror
+  type: push_mirror
   path: /tmp/test_repo/push_val
   httpauth:
     user: michaeljs1990

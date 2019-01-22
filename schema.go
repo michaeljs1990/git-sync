@@ -75,7 +75,7 @@ var schema = `
             "title": "The Type Schema",
             "enum": [
               "fetch_mirror",
-              "github_push_mirror"
+              "push_mirror"
             ]
           },
           "path": {

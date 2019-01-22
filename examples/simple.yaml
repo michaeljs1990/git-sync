@@ -10,12 +10,12 @@ repos:
   metadata:
   - cgit
 - url: https://github.com/michaeljs1990/val.git
-  type: github_push_mirror
+  type: push_mirror
   path: /tmp/test_repo/push_val
   httpauth:
     user: michaeljs1990
     token: pass
-  remote: github_push_mirror
+  remote: github_mirror
   refs:
   - refs/tags/*:refs/tags/*
 github:

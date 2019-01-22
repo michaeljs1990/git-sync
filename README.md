@@ -38,7 +38,7 @@ interval: 3600
 path: /var/lib/repos
 repos:
 - url: https://github.com/michaeljs1990/git-sync.git
-  type: github_push_mirror
+  type: push_mirror
   path: /var/lib/repos/git-sync
   httpauth:
     user: username

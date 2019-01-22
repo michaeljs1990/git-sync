@@ -28,8 +28,8 @@ import (
 )
 
 const (
-	FetchMirror      = "fetch_mirror"
-	GithubPushMirror = "github_push_mirror"
+	FetchMirror = "fetch_mirror"
+	PushMirror  = "push_mirror"
 )
 
 var (
@@ -276,9 +276,9 @@ func syncRepo(r repo) error {
 	return err
 }
 
-// Sync a local repo to github. This won't try to do any fancy stuff so if
+// Sync a local repo to some other source. This won't try to do any fancy stuff so if
 // the repos become out of sync it will just fail.
-func syncToGithub(r repo) error {
+func syncToRepo(r repo) error {
 	wc, err := git.PlainOpen(r.Path)
 	if err != nil {
 		log.WithField("repo", r.URL).Error("Was trying to create a repo for syncing at path ", r.Path, " : ", err.Error())
@@ -340,9 +340,9 @@ func repoWorker(wg *sync.WaitGroup, rc <-chan repo) {
 			if err == git.ErrRepositoryAlreadyExists {
 				syncRepo(r)
 			}
-		case GithubPushMirror:
-			log.WithField("repo", r.URL).Info("Github push mirror job launched")
-			syncToGithub(r)
+		case PushMirror:
+			log.WithField("repo", r.URL).Info("Push mirror job launched")
+			syncToRepo(r)
 		default:
 			log.WithField("repo", r.URL).Info(r.Type, " is not a supported job type")
 		}
