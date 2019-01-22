@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
@@ -9,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"strings"
 	"sync"
 	"time"
 
@@ -18,6 +20,7 @@ import (
 	githttp "gopkg.in/src-d/go-git.v4/plumbing/transport/http"
 
 	github "github.com/google/go-github/v21/github"
+	jsonschema "github.com/santhosh-tekuri/jsonschema"
 	log "github.com/sirupsen/logrus"
 	oauth2 "golang.org/x/oauth2"
 	yaml "gopkg.in/yaml.v2"
@@ -35,22 +38,22 @@ var (
 // Config is the parent level of our YAML data that
 // all other config should tie back into.
 type Config struct {
-	Interval int
-	Path     string
-	Repos    []RepoConfig
-	Github   []GithubConfig
+	Interval int            `json:"interval"`
+	Path     string         `json:"path"`
+	Repos    []RepoConfig   `json:"repos"`
+	Github   []GithubConfig `json:"github"`
 }
 
 // RepoConfig is for adhoc servers that may not live
 // in a place with a common api such as the linux kernel
 type RepoConfig struct {
-	URL      string
-	Type     string
-	Path     string
-	Remote   string
-	Refs     []string
-	Metadata []string
-	HTTPAuth HTTPAuth
+	URL      string   `json:"url"`
+	Type     string   `json:"type"`
+	Path     string   `json:"path"`
+	Remote   string   `json:"remote"`
+	Refs     []string `json:"refs"`
+	Metadata []string `json:"metadata"`
+	HTTPAuth HTTPAuth `json:"httpauth"`
 }
 
 // GithubConfig holds a single github user and will pull down all
@@ -58,17 +61,17 @@ type RepoConfig struct {
 // github has some strict rate limiting and they shouldn't change
 // often in reality.
 type GithubConfig struct {
-	Username string
-	RepoType string
-	Repos    bool
-	Protocol string
-	Metadata []string
-	HTTPAuth HTTPAuth
+	Username string   `json:"username"`
+	RepoType string   `json:"repotype"`
+	Repos    bool     `json:"repos"`
+	Protocol string   `json:"protocol"`
+	Metadata []string `json:"metadata"`
+	HTTPAuth HTTPAuth `json:"httpauth"`
 }
 
 type HTTPAuth struct {
-	User  string
-	Token string
+	User  string `json:"user"`
+	Token string `json:"token"`
 }
 
 // repo maps very closely to the RepoConfig structure in almost
@@ -379,6 +382,7 @@ func main() {
 	conf := flag.String("config", "config.yaml", "Config file to start the application with")
 	workers := flag.Int("workers", 1, "The number of workers trying to update repos")
 	oneshot := flag.Bool("oneshot", false, "Only run the script once and then exit upon completion")
+	validate := flag.Bool("validate", false, "Validate the config file that the user passes to us and then stop")
 
 	verbose := flag.Bool("verbose", false, "Control the level of logging you would like output")
 	log_file := flag.String("log_file", "", "Set the file to log to by default this just sends data to stdout")
@@ -415,11 +419,43 @@ func main() {
 		log.Fatal(err)
 	}
 
-	// This should be validated properly
+	// I'm not in love with what is going on here but in practice it should work just fine.
+	// I think the one edge case is that this will make it so we can't validate a required
+	// field that could be empty. I can't think of any reason I would need that though. So
+	// what we are doing, is taking YAML, something that is half sane for human config and
+	// populating the Config struct. We then turn it into JSON so we can pass it to the JSON
+	// schema validator. Modern problems require modern solutions.
 	config := Config{}
 	err = yaml.Unmarshal(dat, &config)
 	if err != nil {
 		log.Fatal(err)
+	}
+
+	b, err := json.Marshal(config)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	compiler := jsonschema.NewCompiler()
+	if err := compiler.AddResource("schema.json", strings.NewReader(schema)); err != nil {
+		log.Fatal(err)
+	}
+
+	schema, err := compiler.Compile("schema.json")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if err := schema.Validate(strings.NewReader(string(b))); err != nil {
+		log.Fatal(err)
+	}
+
+	// If we have gotten this far and not failed we think it's all good
+	log.Info("Configuration has been validated")
+	if *validate {
+    fmt.Println("Your config looks good to us!")
+    os.Exit(0)
 	}
 
 	// Setup everything needed to run this as a daemon or optionally
