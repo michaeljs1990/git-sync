@@ -454,8 +454,8 @@ func main() {
 	// If we have gotten this far and not failed we think it's all good
 	log.Info("Configuration has been validated")
 	if *validate {
-    fmt.Println("Your config looks good to us!")
-    os.Exit(0)
+		fmt.Println("Your config looks good to us!")
+		os.Exit(0)
 	}
 
 	// Setup everything needed to run this as a daemon or optionally
