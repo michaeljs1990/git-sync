@@ -25,6 +25,7 @@ well with some features but it's at your own risk.
 |Prometheus metrics                    |    |X    |       |       |
 |Hot config reloading                  |    |     |X      |       |
 |Force syncing without process restart |    |     |X      |       |
+|Add unit tests                        |    |     |X      |       |
 
 ## Config
 

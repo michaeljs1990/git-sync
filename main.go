@@ -19,8 +19,8 @@ import (
 	gittrans "gopkg.in/src-d/go-git.v4/plumbing/transport"
 	githttp "gopkg.in/src-d/go-git.v4/plumbing/transport/http"
 
-  promhttp "github.com/prometheus/client_golang/prometheus/promhttp"
 	github "github.com/google/go-github/v21/github"
+	promhttp "github.com/prometheus/client_golang/prometheus/promhttp"
 	jsonschema "github.com/santhosh-tekuri/jsonschema"
 	log "github.com/sirupsen/logrus"
 	oauth2 "golang.org/x/oauth2"
@@ -384,7 +384,7 @@ func main() {
 	workers := flag.Int("workers", 1, "The number of workers trying to update repos")
 	oneshot := flag.Bool("oneshot", false, "Only run the script once and then exit upon completion")
 	validate := flag.Bool("validate", false, "Validate the config file that the user passes to us and then stop")
-  prom_addr := flag.String("prom-listen-address", ":8080", "The address to listen on for HTTP requests.")
+	prom_addr := flag.String("prom-listen-address", ":8080", "The address to listen on for HTTP requests.")
 
 	verbose := flag.Bool("verbose", false, "Control the level of logging you would like output")
 	log_file := flag.String("log_file", "", "Set the file to log to by default this just sends data to stdout")
@@ -460,9 +460,9 @@ func main() {
 		os.Exit(0)
 	}
 
-  // Export prometheus metrics about the service
-  http.Handle("/metrics", promhttp.Handler())
-  go http.ListenAndServe(*prom_addr, nil)
+	// Export prometheus metrics about the service
+	http.Handle("/metrics", promhttp.Handler())
+	go http.ListenAndServe(*prom_addr, nil)
 
 	// Setup everything needed to run this as a daemon or optionally
 	// as a one time service so you can use it in a cron if desired
