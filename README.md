@@ -21,7 +21,7 @@ well with some features but it's at your own risk.
 |SSH user/pass auth                    |    |     |X      |       |
 |SSH private key auth                  |    |     |X      |       |
 |Pull repo over SSH protocol           |    |     |X      |       |
-|Config validation                     |    |     |X      |       |
+|Config validation                     |    |X    |       |       |
 |Prometheus metrics                    |    |     |X      |       |
 |Hot config reloading                  |    |     |X      |       |
 |Force syncing without process restart |    |     |X      |       |
@@ -73,6 +73,11 @@ git-sync -config config.yaml -log_file git_sync.log -log_format json
 Run multiple workers to speed things up
 ```
 git-sync -config config.yaml -log_file git_sync.log -log_format json -workers 10
+```
+
+Validate your config
+```
+git-sync -validate
 ```
 
 ## Development
