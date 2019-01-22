@@ -85,7 +85,10 @@ var schema = `
           },
           "refs": {
             "$id": "#/properties/repos/items/properties/refs",
-            "type": "array",
+            "type": [
+              "array",
+              "null"
+            ],
             "title": "The Refs Schema",
             "items": {
               "$id": "#/properties/repos/items/properties/refs/items",
