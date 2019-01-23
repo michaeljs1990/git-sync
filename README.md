@@ -26,6 +26,7 @@ well with some features but it's at your own risk.
 |Hot config reloading                  |    |     |X      |       |
 |Force syncing without process restart |    |     |X      |       |
 |Add unit tests                        |    |     |X      |       |
+|Add file watching for push repos      |    |     |       |X      |
 
 ## Config
 
