@@ -7,9 +7,11 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
+	"net"
 	"net/http"
 	"os"
 	"path"
+	"regexp"
 	"strings"
 	"sync"
 	"time"
@@ -18,11 +20,13 @@ import (
 	gconfig "gopkg.in/src-d/go-git.v4/config"
 	gittrans "gopkg.in/src-d/go-git.v4/plumbing/transport"
 	githttp "gopkg.in/src-d/go-git.v4/plumbing/transport/http"
+	gitssh "gopkg.in/src-d/go-git.v4/plumbing/transport/ssh"
 
 	github "github.com/google/go-github/v21/github"
 	promhttp "github.com/prometheus/client_golang/prometheus/promhttp"
 	jsonschema "github.com/santhosh-tekuri/jsonschema"
 	log "github.com/sirupsen/logrus"
+	ssh "golang.org/x/crypto/ssh"
 	oauth2 "golang.org/x/oauth2"
 	yaml "gopkg.in/yaml.v2"
 )
@@ -30,10 +34,17 @@ import (
 const (
 	FetchMirror = "fetch_mirror"
 	PushMirror  = "push_mirror"
+
+	GitProtocol  = "git"
+	SshProtocol  = "ssh"
+	HttpProtocol = "http"
 )
 
 var (
-	NoGithubConfigFound = errors.New("No github config was found for this repo")
+	NoGithubConfigFound  = errors.New("No github config was found for this repo")
+	httpProtocolRegex, _ = regexp.Compile("^http(s)?://")
+	gitProtocolRegex, _  = regexp.Compile("^git://")
+	sshProtocolRegex, _  = regexp.Compile("^ssh://|.*:.*")
 )
 
 // Config is the parent level of our YAML data that
@@ -48,13 +59,15 @@ type Config struct {
 // RepoConfig is for adhoc servers that may not live
 // in a place with a common api such as the linux kernel
 type RepoConfig struct {
-	URL      string   `json:"url"`
-	Type     string   `json:"type"`
-	Path     string   `json:"path"`
-	Remote   string   `json:"remote"`
-	Refs     []string `json:"refs"`
-	Metadata []string `json:"metadata"`
-	HTTPAuth HTTPAuth `json:"httpauth"`
+	URL        string     `json:"url"`
+	Type       string     `json:"type"`
+	Path       string     `json:"path"`
+	Remote     string     `json:"remote"`
+	Refs       []string   `json:"refs"`
+	Metadata   []string   `json:"metadata"`
+	HTTPAuth   HTTPAuth   `json:"httpauth"`
+	SSHAuth    SSHAuth    `json:"sshauth"`
+	SSHKeyAuth SSHKeyAuth `json:"sshkeyauth"`
 }
 
 // GithubConfig holds a single github user and will pull down all
@@ -62,12 +75,14 @@ type RepoConfig struct {
 // github has some strict rate limiting and they shouldn't change
 // often in reality.
 type GithubConfig struct {
-	Username string   `json:"username"`
-	RepoType string   `json:"repotype"`
-	Repos    bool     `json:"repos"`
-	Protocol string   `json:"protocol"`
-	Metadata []string `json:"metadata"`
-	HTTPAuth HTTPAuth `json:"httpauth"`
+	Username   string     `json:"username"`
+	RepoType   string     `json:"repotype"`
+	Repos      bool       `json:"repos"`
+	Protocol   string     `json:"protocol"`
+	Metadata   []string   `json:"metadata"`
+	HTTPAuth   HTTPAuth   `json:"httpauth"`
+	SSHAuth    SSHAuth    `json:"sshauth"`
+	SSHKeyAuth SSHKeyAuth `json:"sshkeyauth"`
 }
 
 type HTTPAuth struct {
@@ -75,17 +90,29 @@ type HTTPAuth struct {
 	Token string `json:"token"`
 }
 
+type SSHAuth struct {
+	User     string `json:"user"`
+	Password string `json:"password"`
+}
+
+type SSHKeyAuth struct {
+	User    string `json:"user"`
+	KeyPath string `json:"keypath"`
+}
+
 // repo maps very closely to the RepoConfig structure in almost
 // all cases however repo is what all other configs must conform
 // to for being processed
 type repo struct {
-	URL      string
-	Type     string
-	Path     string
-	Remote   string
-	Refs     []string
-	Metadata []string
-	HTTPAuth HTTPAuth
+	URL        string
+	Type       string
+	Path       string
+	Remote     string
+	Refs       []string
+	Metadata   []string
+	HTTPAuth   HTTPAuth
+	SSHAuth    SSHAuth
+	SSHKeyAuth SSHKeyAuth
 }
 
 func (r RepoConfig) toRepo(c Config) repo {
@@ -97,6 +124,7 @@ func (r RepoConfig) toRepo(c Config) repo {
 		Remote:   r.Remote,
 		Metadata: r.Metadata,
 		HTTPAuth: r.HTTPAuth,
+		SSHAuth:  r.SSHAuth,
 	}
 }
 
@@ -139,16 +167,35 @@ func (r GithubConfig) toRepos(c Config) []repo {
 		// only HTTP/HTTPS clones are. In addition to this we need to do sanity checking
 		// such as not passing SSH auth info to HTTP methods and so on.
 		ret = append(ret, repo{
-			URL:      url,
-			Type:     FetchMirror,
-			Path:     path.Join(c.Path, *v.FullName),
-			Remote:   "origin",
-			Metadata: r.Metadata,
-			HTTPAuth: r.HTTPAuth,
+			URL:        url,
+			Type:       FetchMirror,
+			Path:       path.Join(c.Path, *v.FullName),
+			Remote:     "origin",
+			Metadata:   r.Metadata,
+			HTTPAuth:   r.HTTPAuth,
+			SSHAuth:    r.SSHAuth,
+			SSHKeyAuth: r.SSHKeyAuth,
 		})
 	}
 
 	return ret
+}
+
+// Determine the git url protocol type from the URL
+// that has been set for it.
+func (r repo) protocolType() string {
+	url := []byte(r.URL)
+	switch {
+	case httpProtocolRegex.Match(url):
+		return HttpProtocol
+	case gitProtocolRegex.Match(url):
+		return GitProtocol
+	case sshProtocolRegex.Match(url):
+		return SshProtocol
+	default:
+		log.WithField("repo", r.URL).Fatal("The URL for this repo doesn't look to be a valid git URL")
+		return ""
+	}
 }
 
 // determine the type of auth needed to clone down this repo
@@ -157,11 +204,33 @@ func (r GithubConfig) toRepos(c Config) []repo {
 // empty one.
 func (r repo) getAuth() gittrans.AuthMethod {
 	switch {
-	case r.HTTPAuth != (HTTPAuth{}):
+	case r.HTTPAuth != (HTTPAuth{}) && r.protocolType() == HttpProtocol:
 		return &githttp.BasicAuth{
 			Username: r.HTTPAuth.User,
 			Password: r.HTTPAuth.Token,
 		}
+	case r.SSHKeyAuth != (SSHKeyAuth{}) && r.protocolType() == SshProtocol:
+		sshKey, err := ioutil.ReadFile(r.SSHKeyAuth.KeyPath)
+		if err != nil {
+			log.WithField("repo", r.URL).Fatal("Unable to read SSH Key : ", err.Error())
+		}
+		signer, err := ssh.ParsePrivateKey([]byte(sshKey))
+		if err != nil {
+			log.WithField("repo", r.URL).Fatal("Unable to parse private key : ", err.Error())
+		}
+		return &gitssh.PublicKeys{
+			User:   r.SSHKeyAuth.User,
+			Signer: signer,
+		}
+	case r.SSHAuth != (SSHAuth{}) && r.protocolType() == SshProtocol:
+		return &gitssh.Password{
+			User:     r.SSHAuth.User,
+			Password: r.SSHAuth.Password,
+			HostKeyCallbackHelper: gitssh.HostKeyCallbackHelper{
+				HostKeyCallback: func(hostname string, remote net.Addr, key ssh.PublicKey) error {
+					return nil
+				},
+			}}
 	default:
 		var emptyAuth gittrans.AuthMethod
 		return emptyAuth

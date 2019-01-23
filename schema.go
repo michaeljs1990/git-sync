@@ -69,6 +69,48 @@ var schema = `
               }
             }
           },
+          "sshauth": {
+            "$id": "#/properties/repos/items/properties/sshauth",
+            "type": "object",
+            "title": "The Sshauth Schema",
+            "required": [
+              "user",
+              "password"
+            ],
+            "properties": {
+              "user": {
+                "$id": "#/properties/github/items/properties/sshauth/properties/user",
+                "type": "string",
+                "title": "The User Schema"
+              },
+              "token": {
+                "$id": "#/properties/github/items/properties/sshauth/properties/password",
+                "type": "string",
+                "title": "The Password Schema"
+              }
+            }
+          },
+          "sshkeyauth": {
+            "$id": "#/properties/repos/items/properties/sshkeyauth",
+            "type": "object",
+            "title": "The Sshkeyauth Schema",
+            "required": [
+              "user",
+              "keypath"
+            ],
+            "properties": {
+              "user": {
+                "$id": "#/properties/github/items/properties/sshkeyauth/properties/user",
+                "type": "string",
+                "title": "The User Schema"
+              },
+              "keypath": {
+                "$id": "#/properties/github/items/properties/sshkeyauth/properties/keypath",
+                "type": "string",
+                "title": "The Keypath Schema"
+              }
+            }
+          },
           "type": {
             "$id": "#/properties/repos/items/properties/type",
             "type": "string",
@@ -138,6 +180,12 @@ var schema = `
           },
           "httpauth": {
             "$ref": "#/properties/repos/items/properties/httpauth"
+          },
+          "sshauth": {
+            "$ref": "#/properties/repos/items/properties/sshauth"
+          },
+          "sshkeyauth": {
+            "$ref": "#/properties/repos/items/properties/sshkeyauth"
           },
           "repos": {
             "$id": "#/properties/github/items/properties/repos",
