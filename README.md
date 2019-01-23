@@ -17,10 +17,10 @@ well with some features but it's at your own risk.
 |Pull repo over http auth              |X   |     |       |       |
 |Push repo over git protocol           |    |X    |       |       |
 |Pull repo over git protocol           |    |X    |       |       |
-|Push repo over SSH protocol           |    |     |X      |       |
-|SSH user/pass auth                    |    |     |X      |       |
-|SSH private key auth                  |    |     |X      |       |
-|Pull repo over SSH protocol           |    |     |X      |       |
+|Push repo over SSH protocol           |    |X    |       |       |
+|SSH user/pass auth                    |    |X    |       |       |
+|SSH private key auth                  |    |X    |       |       |
+|Pull repo over SSH protocol           |X   |     |       |       |
 |Config validation                     |    |X    |       |       |
 |Prometheus metrics                    |    |X    |       |       |
 |Hot config reloading                  |    |     |X      |       |
