@@ -163,7 +163,7 @@ var schema = `
     },
     "github": {
       "$id": "#/properties/github",
-      "type": "array",
+      "type": ["array", "null"],
       "title": "The Github Schema",
       "items": {
         "$id": "#/properties/github/items",

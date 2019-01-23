@@ -15,13 +15,13 @@ well with some features but it's at your own risk.
 |Clone repositories from gitlab        |    |     |       |X      |
 |Push repo over http auth              |X   |     |       |       |
 |Pull repo over http auth              |X   |     |       |       |
-|Push repo over git protocol           |    |X    |       |       |
-|Pull repo over git protocol           |    |X    |       |       |
-|Push repo over SSH protocol           |    |X    |       |       |
-|SSH user/pass auth                    |    |X    |       |       |
-|SSH private key auth                  |    |X    |       |       |
+|Push repo over git protocol           |X   |     |       |       |
+|Pull repo over git protocol           |X   |     |       |       |
+|Push repo over SSH protocol           |X   |     |       |       |
+|SSH user/pass auth                    |X   |     |       |       |
+|SSH private key auth                  |X   |     |       |       |
 |Pull repo over SSH protocol           |X   |     |       |       |
-|Config validation                     |    |X    |       |       |
+|Config validation                     |X   |     |       |       |
 |Prometheus metrics                    |    |X    |       |       |
 |Hot config reloading                  |    |     |X      |       |
 |Force syncing without process restart |    |     |X      |       |
@@ -44,6 +44,13 @@ repos:
     user: username
     token: sometoken
   remote: github_mirror
+- url: ssh://git@cgit.site.com:repos/git-sync
+  type: fetch_mirror
+  path: /tmp/test_repo/test
+  sshkeyauth:
+    user: git
+    keypath: ~/.ssh/id_rsa
+  remote: mirror
 github:
 - username: michaeljs1990
   httpauth:

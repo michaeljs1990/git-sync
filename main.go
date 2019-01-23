@@ -7,7 +7,6 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
-	"net"
 	"net/http"
 	"os"
 	"path"
@@ -117,14 +116,15 @@ type repo struct {
 
 func (r RepoConfig) toRepo(c Config) repo {
 	return repo{
-		URL:      r.URL,
-		Refs:     r.Refs,
-		Type:     r.Type,
-		Path:     r.Path,
-		Remote:   r.Remote,
-		Metadata: r.Metadata,
-		HTTPAuth: r.HTTPAuth,
-		SSHAuth:  r.SSHAuth,
+		URL:        r.URL,
+		Refs:       r.Refs,
+		Type:       r.Type,
+		Path:       r.Path,
+		Remote:     r.Remote,
+		Metadata:   r.Metadata,
+		HTTPAuth:   r.HTTPAuth,
+		SSHAuth:    r.SSHAuth,
+		SSHKeyAuth: r.SSHKeyAuth,
 	}
 }
 
@@ -203,6 +203,7 @@ func (r repo) protocolType() string {
 // can't find anything to use as an auth method we return an
 // empty one.
 func (r repo) getAuth() gittrans.AuthMethod {
+
 	switch {
 	case r.HTTPAuth != (HTTPAuth{}) && r.protocolType() == HttpProtocol:
 		return &githttp.BasicAuth{
@@ -226,11 +227,7 @@ func (r repo) getAuth() gittrans.AuthMethod {
 		return &gitssh.Password{
 			User:     r.SSHAuth.User,
 			Password: r.SSHAuth.Password,
-			HostKeyCallbackHelper: gitssh.HostKeyCallbackHelper{
-				HostKeyCallback: func(hostname string, remote net.Addr, key ssh.PublicKey) error {
-					return nil
-				},
-			}}
+		}
 	default:
 		var emptyAuth gittrans.AuthMethod
 		return emptyAuth
@@ -273,9 +270,10 @@ func bareMirrorClone(r repo) error {
 
 	log.WithField("repo", r.URL).Info("Trying to bare clone repo")
 	_, err = git.PlainClone(r.Path, true, &git.CloneOptions{
-		URL:      r.URL,
-		Auth:     r.getAuth(),
-		Progress: w,
+		URL:        r.URL,
+		RemoteName: r.Remote,
+		Auth:       r.getAuth(),
+		Progress:   w,
 	})
 
 	if err != nil {
@@ -284,7 +282,7 @@ func bareMirrorClone(r repo) error {
 			log.WithField("repo", r.URL).Info("This is expected and good : ", err.Error())
 			return err
 		default:
-			log.WithField("repo", r.URL).Error(err.Error())
+			log.WithField("repo", r.URL).Error("This is very bad : ", err.Error())
 			return err
 		}
 	}
@@ -298,7 +296,7 @@ func bareMirrorClone(r repo) error {
 func syncRepo(r repo) error {
 	wc, err := git.PlainOpen(r.Path)
 	if err != nil {
-		log.WithField("repo", r.URL).Error("Was trying to create a repo for syncing at path ", r.Path, " : ", err.Error())
+		log.WithField("repo", r.URL).Error("Was trying to sync repo at path ", r.Path, " : ", err.Error())
 		return err
 	}
 

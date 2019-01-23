@@ -18,6 +18,20 @@ repos:
   remote: github_mirror
   refs:
   - refs/tags/*:refs/tags/*
+- url: ssh://git@cgit.site.com:repos/git-sync
+  type: fetch_mirror
+  path: /tmp/test_repo/test
+  sshkeyauth:
+    user: git
+    keypath: /home/eatingthenight/.ssh/id_rsa
+  remote: mirror
+- url: ssh://git@cgit.site.com:repos/git-sync
+  type: fetch_mirror
+  path: /tmp/test_repo/test
+  sshkeyauth:
+    user: git
+    password: password
+  remote: mirror
 github:
 - username: michaeljs1990
   httpauth:
