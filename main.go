@@ -441,10 +441,10 @@ func cgitMetadataOperation(r repo) error {
 	}
 
 	// Try and be clever about what metadata we should be writing out
-  if r.Extras != (Extras{}) {
-	  config.SetOption("cgit", "", "owner", r.Extras.CgitOwner)
-	  config.SetOption("cgit", "", "section", r.Extras.CgitSection)
-  }
+	if r.Extras != (Extras{}) {
+		config.SetOption("cgit", "", "owner", r.Extras.CgitOwner)
+		config.SetOption("cgit", "", "section", r.Extras.CgitSection)
+	}
 
 	encoder := gitconfig.NewEncoder(gitConfigFile)
 	err = encoder.Encode(config)
@@ -463,22 +463,20 @@ func cgitMetadataOperation(r repo) error {
 // This checks if the user has defined any metadata operations to be performed on the repo.
 // An example of that is doing some custom configuration to the git config file that may
 // be specific to the type of repository browser that you are using.
-func runMetadataOperations(r repo) error {
+func runMetadataOperations(r repo) {
 	for _, m := range r.Metadata {
 		switch m {
 		case CgitMetadata:
 			err := cgitMetadataOperation(r)
 			if err != nil {
 				log.WithField("repo", r.URL).Error("Issue writing cgit metadata : ", err.Error())
+			} else {
+				log.WithField("repo", r.URL).Info("Cgit metadata has been configured for this repo")
 			}
-			return nil
 		default:
 			log.WithField("repo", r.URL).Error("The meta data option (", m, ") has not been defined")
-			return nil
 		}
 	}
-
-	return nil
 }
 
 func repoWorker(wg *sync.WaitGroup, rc <-chan repo) {
@@ -499,6 +497,7 @@ func repoWorker(wg *sync.WaitGroup, rc <-chan repo) {
 			log.WithField("repo", r.URL).Info(r.Type, " is not a supported job type")
 		}
 
+		// These should log information but never cause a crash
 		runMetadataOperations(r)
 	}
 }
