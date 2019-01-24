@@ -47,9 +47,9 @@ const (
 
 var (
 	NoGithubConfigFound  = errors.New("No github config was found for this repo")
-	httpProtocolRegex, _ = regexp.Compile("^http(s)?://")
-	gitProtocolRegex, _  = regexp.Compile("^git://")
-	sshProtocolRegex, _  = regexp.Compile("^ssh://|.*:.*")
+	HttpProtocolRegex, _ = regexp.Compile("^http(s)?://")
+	GitProtocolRegex, _  = regexp.Compile("^git://")
+	SshProtocolRegex, _  = regexp.Compile("^ssh://|.*:.*")
 )
 
 // Config is the parent level of our YAML data that
@@ -214,11 +214,11 @@ func (r GithubConfig) toRepos(c Config) []repo {
 func (r repo) protocolType() string {
 	url := []byte(r.URL)
 	switch {
-	case httpProtocolRegex.Match(url):
+	case HttpProtocolRegex.Match(url):
 		return HttpProtocol
-	case gitProtocolRegex.Match(url):
+	case GitProtocolRegex.Match(url):
 		return GitProtocol
-	case sshProtocolRegex.Match(url):
+	case SshProtocolRegex.Match(url):
 		return SshProtocol
 	default:
 		log.WithField("repo", r.URL).Fatal("The URL for this repo doesn't look to be a valid git URL")
