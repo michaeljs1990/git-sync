@@ -1,10 +1,11 @@
 Git Sync
 ========
 
-Git sync is a tool that I have written to keep my custom hosted git repository in sync
-with multiple different sources. It currently is somewhat limited because I have only
-added proper support for pulling over http/https. You can use the git or ssh protocol as
-well with some features but it's at your own risk.
+Git sync is a tool that I have written to keep my custom hosted git repo in sync with
+multiple different sources. It can pull from places such as github at a set interval
+as well as push to any git, http, https, or ssh repository. Additinally I have added
+some features for populating metadata on cgit repositories that you can turn on if you
+want.
 
 ## Features
 
@@ -27,6 +28,7 @@ well with some features but it's at your own risk.
 |Force syncing without process restart |    |     |X      |       |
 |Add unit tests                        |    |     |X      |       |
 |Add file watching for push repos      |    |     |       |X      |
+|Populate some cgit metadata           |X   |     |       |       |
 
 ## Config
 
