@@ -48,6 +48,33 @@ var schema = `
             "type": "string",
             "title": "The Url Schema"
           },
+          "extras": {
+            "$id": "#/properties/repos/items/properties/extras",
+            "type": "object",
+            "title": "The Extras Schema",
+            "properties": {
+              "username": {
+                "$id": "#/properties/github/items/properties/extras/properties/username",
+                "type": "string",
+                "title": "The User Schema"
+              },
+              "cgitsection": {
+                "$id": "#/properties/github/items/properties/extras/properties/cgitsection",
+                "type": "string",
+                "title": "The Cgitsection Schema"
+              },
+              "cgitowner": {
+                "$id": "#/properties/github/items/properties/extras/properties/cgitowner",
+                "type": "string",
+                "title": "The Cgitowner Schema"
+              },
+              "description": {
+                "$id": "#/properties/github/items/properties/extras/properties/description",
+                "type": "string",
+                "title": "The Description Schema"
+              }
+            }
+          },
           "httpauth": {
             "$id": "#/properties/repos/items/properties/httpauth",
             "type": "object",
@@ -163,7 +190,10 @@ var schema = `
     },
     "github": {
       "$id": "#/properties/github",
-      "type": ["array", "null"],
+      "type": [
+        "array",
+        "null"
+      ],
       "title": "The Github Schema",
       "items": {
         "$id": "#/properties/github/items",
@@ -177,6 +207,9 @@ var schema = `
             "$id": "#/properties/github/items/properties/username",
             "type": "string",
             "title": "The Username Schema"
+          },
+          "extras": {
+            "$ref": "#/properties/repos/items/properties/extras"
           },
           "httpauth": {
             "$ref": "#/properties/repos/items/properties/httpauth"

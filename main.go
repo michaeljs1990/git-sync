@@ -15,8 +15,12 @@ import (
 	"sync"
 	"time"
 
+	// Sorry the naming here got kinda bad of note gconfig is for configuration
+	// of what branches and refs you want to push. gitconfig is for playing with
+	// the actual git config file.
 	git "gopkg.in/src-d/go-git.v4"
 	gconfig "gopkg.in/src-d/go-git.v4/config"
+	gitconfig "gopkg.in/src-d/go-git.v4/plumbing/format/config"
 	gittrans "gopkg.in/src-d/go-git.v4/plumbing/transport"
 	githttp "gopkg.in/src-d/go-git.v4/plumbing/transport/http"
 	gitssh "gopkg.in/src-d/go-git.v4/plumbing/transport/ssh"
@@ -37,6 +41,8 @@ const (
 	GitProtocol  = "git"
 	SshProtocol  = "ssh"
 	HttpProtocol = "http"
+
+	CgitMetadata = "cgit"
 )
 
 var (
@@ -55,6 +61,15 @@ type Config struct {
 	Github   []GithubConfig `json:"github"`
 }
 
+// Extras struct is loaded with pretty much anything you want
+// that might be useful for people performing metadata operations
+type Extras struct {
+	Username    string `json:"username"`
+	CgitSection string `json:"cgitsection"`
+	CgitOwner   string `json:"cgitowner"`
+	Description string `json:"description"`
+}
+
 // RepoConfig is for adhoc servers that may not live
 // in a place with a common api such as the linux kernel
 type RepoConfig struct {
@@ -64,6 +79,7 @@ type RepoConfig struct {
 	Remote     string     `json:"remote"`
 	Refs       []string   `json:"refs"`
 	Metadata   []string   `json:"metadata"`
+	Extras     Extras     `json:"extras"`
 	HTTPAuth   HTTPAuth   `json:"httpauth"`
 	SSHAuth    SSHAuth    `json:"sshauth"`
 	SSHKeyAuth SSHKeyAuth `json:"sshkeyauth"`
@@ -79,6 +95,7 @@ type GithubConfig struct {
 	Repos      bool       `json:"repos"`
 	Protocol   string     `json:"protocol"`
 	Metadata   []string   `json:"metadata"`
+	Extras     Extras     `json:"extras"`
 	HTTPAuth   HTTPAuth   `json:"httpauth"`
 	SSHAuth    SSHAuth    `json:"sshauth"`
 	SSHKeyAuth SSHKeyAuth `json:"sshkeyauth"`
@@ -109,6 +126,7 @@ type repo struct {
 	Remote     string
 	Refs       []string
 	Metadata   []string
+	Extras     Extras
 	HTTPAuth   HTTPAuth
 	SSHAuth    SSHAuth
 	SSHKeyAuth SSHKeyAuth
@@ -122,6 +140,7 @@ func (r RepoConfig) toRepo(c Config) repo {
 		Path:       r.Path,
 		Remote:     r.Remote,
 		Metadata:   r.Metadata,
+		Extras:     r.Extras,
 		HTTPAuth:   r.HTTPAuth,
 		SSHAuth:    r.SSHAuth,
 		SSHKeyAuth: r.SSHKeyAuth,
@@ -163,6 +182,14 @@ func (r GithubConfig) toRepos(c Config) []repo {
 			os.Exit(1)
 		}
 
+		// Setup our extras struct
+		extras := Extras{
+			Username:    r.Username,
+			CgitSection: r.Username,
+			CgitOwner:   r.Username,
+			Description: *v.Description,
+		}
+
 		// Need to add support here for using different kinds of urls but currently
 		// only HTTP/HTTPS clones are. In addition to this we need to do sanity checking
 		// such as not passing SSH auth info to HTTP methods and so on.
@@ -172,6 +199,7 @@ func (r GithubConfig) toRepos(c Config) []repo {
 			Path:       path.Join(c.Path, *v.FullName),
 			Remote:     "origin",
 			Metadata:   r.Metadata,
+			Extras:     extras,
 			HTTPAuth:   r.HTTPAuth,
 			SSHAuth:    r.SSHAuth,
 			SSHKeyAuth: r.SSHKeyAuth,
@@ -396,6 +424,63 @@ func syncToRepo(r repo) error {
 	return nil
 }
 
+func cgitMetadataOperation(r repo) error {
+	gitConfigFile, err := os.OpenFile(path.Join(r.Path, "config"), os.O_RDWR, 0644)
+	if err != nil {
+		return errors.New("Unable to read this repos git config file : " + err.Error())
+	}
+
+	decoder := gitconfig.NewDecoder(gitConfigFile)
+	config := &gitconfig.Config{}
+	decoder.Decode(config)
+
+	// Seek to the start of the file so we overwrite it instead of appending
+	_, err = gitConfigFile.Seek(0, 0)
+	if err != nil {
+		return errors.New("Unable to seek to the start of the file before writing it out : " + err.Error())
+	}
+
+	// Try and be clever about what metadata we should be writing out
+  if r.Extras != (Extras{}) {
+	  config.SetOption("cgit", "", "owner", r.Extras.CgitOwner)
+	  config.SetOption("cgit", "", "section", r.Extras.CgitSection)
+  }
+
+	encoder := gitconfig.NewEncoder(gitConfigFile)
+	err = encoder.Encode(config)
+	if err != nil {
+		return errors.New("Unable to write this repos git config file : " + err.Error())
+	}
+
+	err = gitConfigFile.Close()
+	if err != nil {
+		return errors.New("Unable to close the file we wrote to something went wrong: " + err.Error())
+	}
+
+	return nil
+}
+
+// This checks if the user has defined any metadata operations to be performed on the repo.
+// An example of that is doing some custom configuration to the git config file that may
+// be specific to the type of repository browser that you are using.
+func runMetadataOperations(r repo) error {
+	for _, m := range r.Metadata {
+		switch m {
+		case CgitMetadata:
+			err := cgitMetadataOperation(r)
+			if err != nil {
+				log.WithField("repo", r.URL).Error("Issue writing cgit metadata : ", err.Error())
+			}
+			return nil
+		default:
+			log.WithField("repo", r.URL).Error("The meta data option (", m, ") has not been defined")
+			return nil
+		}
+	}
+
+	return nil
+}
+
 func repoWorker(wg *sync.WaitGroup, rc <-chan repo) {
 	defer wg.Done()
 
@@ -413,6 +498,8 @@ func repoWorker(wg *sync.WaitGroup, rc <-chan repo) {
 		default:
 			log.WithField("repo", r.URL).Info(r.Type, " is not a supported job type")
 		}
+
+		runMetadataOperations(r)
 	}
 }
 
