@@ -508,30 +508,40 @@ func repoWorker(wg *sync.WaitGroup, rc <-chan repo) {
 	}
 }
 
+func readConfig() Config {
+	configLock.RLock()
+	defer configLock.RUnlock()
+	return globalConf
+}
+
 // Feed the channel all the information that it needs
 func feedChannel(jobs chan repo, oneshot bool) {
 	for {
-		// Get the latest config that might have been updated
-		configLock.RLock()
-		c := globalConf
-		configLock.RUnlock()
-
-		for _, v := range c.Repos {
-			jobs <- v.toRepo(c)
-		}
-
-		for _, v := range c.Github {
-			for _, r := range v.toRepos(c) {
-				jobs <- r
-			}
-		}
+		makeJobs(jobs)
 
 		if oneshot == true {
 			close(jobs)
 			return
 		}
 
+		c := readConfig()
+
 		time.Sleep(time.Duration(c.Interval) * time.Second)
+	}
+}
+
+func makeJobs(jobs chan repo) {
+	// Get the latest config that might have been updated
+	c := readConfig()
+
+	for _, v := range c.Repos {
+		jobs <- v.toRepo(c)
+	}
+
+	for _, v := range c.Github {
+		for _, r := range v.toRepos(c) {
+			jobs <- r
+		}
 	}
 }
 
@@ -585,20 +595,23 @@ func loadConfig(config string) (Config, error) {
 	return c, nil
 }
 
-func handleSignals(signals <-chan os.Signal, config string) {
+func handleSignals(signals <-chan os.Signal, config string, jobs chan repo) {
 	for signal := range signals {
 		switch signal {
-		case syscall.SIGHUP:
+		case syscall.SIGUSR1:
 			log.Warn("Config reload requested")
 			newConfig, err := loadConfig(config)
 			if err != nil {
 				log.Error("Config not reloaded :", err.Error())
 			} else {
-				configLock.RLock()
+				configLock.Lock()
 				globalConf = newConfig
-				configLock.RUnlock()
+				configLock.Unlock()
 				log.Warn("Config reload finished")
 			}
+		case syscall.SIGUSR2:
+			log.Warn("Manual sync job was fired off")
+			makeJobs(jobs)
 		}
 	}
 }
@@ -667,8 +680,8 @@ func main() {
 
 	// Handle hot config reloads on SIGHUP
 	signals := make(chan os.Signal, 1)
-	signal.Notify(signals, syscall.SIGHUP)
-	go handleSignals(signals, *conf)
+	signal.Notify(signals, syscall.SIGUSR1, syscall.SIGUSR2)
+	go handleSignals(signals, *conf, queue)
 
 	// Hang for now but later this should do some checking for
 	// signals that may be sent to the processes as well as managing
