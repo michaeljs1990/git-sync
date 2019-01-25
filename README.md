@@ -23,8 +23,8 @@ want.
 |SSH private key auth                  |X   |     |       |       |
 |Pull repo over SSH protocol           |X   |     |       |       |
 |Config validation                     |X   |     |       |       |
-|Prometheus metrics                    |    |X    |       |       |
-|Hot config reloading                  |    |     |X      |       |
+|Prometheus metrics                    |X   |     |       |       |
+|Hot config reloading                  |X   |     |       |       |
 |Force syncing without process restart |    |     |X      |       |
 |Add unit tests                        |    |     |X      |       |
 |Add file watching for push repos      |    |     |       |X      |
