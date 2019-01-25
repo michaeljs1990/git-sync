@@ -25,7 +25,7 @@ want.
 |Config validation                     |X   |     |       |       |
 |Prometheus metrics                    |X   |     |       |       |
 |Hot config reloading                  |X   |     |       |       |
-|Force syncing without process restart |    |     |X      |       |
+|Force syncing without process restart |X   |     |       |       |
 |Add unit tests                        |    |     |X      |       |
 |Add file watching for push repos      |    |     |       |X      |
 |Populate some cgit metadata           |X   |     |       |       |
@@ -90,6 +90,15 @@ Validate your config
 ```
 git-sync -validate
 ```
+
+## Signals
+
+You can reload the config file for your git-sync process with the use of usr1. This will validate
+the config before doing the reload so if you have a bad config it will just output an error but
+keep running with the old config.
+
+If you are excited to have something pushed out or want a new update you can hit git-sync with usr2.
+This will cause it to sync all repositories again that it knows about.
 
 ## Development
 
