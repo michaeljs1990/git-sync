@@ -9,10 +9,12 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"os/signal"
 	"path"
 	"regexp"
 	"strings"
 	"sync"
+	"syscall"
 	"time"
 
 	// Sorry the naming here got kinda bad of note gconfig is for configuration
@@ -50,6 +52,11 @@ var (
 	HttpProtocolRegex, _ = regexp.Compile("^http(s)?://")
 	GitProtocolRegex, _  = regexp.Compile("^git://")
 	SshProtocolRegex, _  = regexp.Compile("^ssh://|.*:.*")
+)
+
+var (
+	globalConf = Config{}
+	configLock = sync.RWMutex{}
 )
 
 // Config is the parent level of our YAML data that
@@ -187,7 +194,6 @@ func (r GithubConfig) toRepos(c Config) []repo {
 			Username:    r.Username,
 			CgitSection: r.Username,
 			CgitOwner:   r.Username,
-			Description: *v.Description,
 		}
 
 		// Need to add support here for using different kinds of urls but currently
@@ -503,8 +509,13 @@ func repoWorker(wg *sync.WaitGroup, rc <-chan repo) {
 }
 
 // Feed the channel all the information that it needs
-func feedChannel(jobs chan repo, c Config, oneshot bool) {
+func feedChannel(jobs chan repo, oneshot bool) {
 	for {
+		// Get the latest config that might have been updated
+		configLock.RLock()
+		c := globalConf
+		configLock.RUnlock()
+
 		for _, v := range c.Repos {
 			jobs <- v.toRepo(c)
 		}
@@ -529,6 +540,66 @@ func launchWorkers(workers int, wg *sync.WaitGroup, rc <-chan repo) {
 		log.Trace("Worker ", i, " has been started")
 		wg.Add(1)
 		go repoWorker(wg, rc)
+	}
+}
+
+// I'm not in love with what is going on here but in practice it should work just fine.
+// I think the one edge case is that this will make it so we can't validate a required
+// field that could be empty. I can't think of any reason I would need that though. So
+// what we are doing, is taking YAML, something that is half sane for human config and
+// populating the Config struct. We then turn it into JSON so we can pass it to the JSON
+// schema validator. Modern problems require modern solutions.
+func loadConfig(config string) (Config, error) {
+	c := Config{}
+
+	// Load our config into memory and do some error checking
+	dat, err := ioutil.ReadFile(config)
+	if err != nil {
+		return c, err
+	}
+
+	err = yaml.Unmarshal(dat, &c)
+	if err != nil {
+		return c, err
+	}
+
+	b, err := json.Marshal(c)
+	if err != nil {
+		return c, err
+	}
+
+	compiler := jsonschema.NewCompiler()
+	if err := compiler.AddResource("schema.json", strings.NewReader(schema)); err != nil {
+		return c, err
+	}
+
+	schema, err := compiler.Compile("schema.json")
+	if err != nil {
+		return c, err
+	}
+
+	if err := schema.Validate(strings.NewReader(string(b))); err != nil {
+		return c, err
+	}
+
+	return c, nil
+}
+
+func handleSignals(signals <-chan os.Signal, config string) {
+	for signal := range signals {
+		switch signal {
+		case syscall.SIGHUP:
+			log.Warn("Config reload requested")
+			newConfig, err := loadConfig(config)
+			if err != nil {
+				log.Error("Config not reloaded :", err.Error())
+			} else {
+				configLock.RLock()
+				globalConf = newConfig
+				configLock.RUnlock()
+				log.Warn("Config reload finished")
+			}
+		}
 	}
 }
 
@@ -568,43 +639,13 @@ func main() {
 		log.SetLevel(log.WarnLevel)
 	}
 
-	// Load our config into memory and do some error checking
-	dat, err := ioutil.ReadFile(*conf)
+	config, err := loadConfig(*conf)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(err.Error())
 	}
 
-	// I'm not in love with what is going on here but in practice it should work just fine.
-	// I think the one edge case is that this will make it so we can't validate a required
-	// field that could be empty. I can't think of any reason I would need that though. So
-	// what we are doing, is taking YAML, something that is half sane for human config and
-	// populating the Config struct. We then turn it into JSON so we can pass it to the JSON
-	// schema validator. Modern problems require modern solutions.
-	config := Config{}
-	err = yaml.Unmarshal(dat, &config)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	b, err := json.Marshal(config)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	compiler := jsonschema.NewCompiler()
-	if err := compiler.AddResource("schema.json", strings.NewReader(schema)); err != nil {
-		log.Fatal(err)
-	}
-
-	schema, err := compiler.Compile("schema.json")
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	if err := schema.Validate(strings.NewReader(string(b))); err != nil {
-		log.Fatal(err)
-	}
+	// Set the global conf no mutex is needed at this time
+	globalConf = config
 
 	// If we have gotten this far and not failed we think it's all good
 	log.Info("Configuration has been validated")
@@ -621,8 +662,13 @@ func main() {
 	// as a one time service so you can use it in a cron if desired
 	var wg sync.WaitGroup
 	queue := make(chan repo, *workers*2)
-	go feedChannel(queue, config, *oneshot)
+	go feedChannel(queue, *oneshot)
 	launchWorkers(*workers, &wg, queue)
+
+	// Handle hot config reloads on SIGHUP
+	signals := make(chan os.Signal, 1)
+	signal.Notify(signals, syscall.SIGHUP)
+	go handleSignals(signals, *conf)
 
 	// Hang for now but later this should do some checking for
 	// signals that may be sent to the processes as well as managing

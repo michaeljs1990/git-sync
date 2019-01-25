@@ -1,4 +1,4 @@
-module cgit.xrt0x.com/xrt0x/test
+module cgit.xrt0x.com/xrt0x/git-sync
 
 require (
 	github.com/google/go-github/v21 v21.0.0
