@@ -679,7 +679,7 @@ func main() {
 	launchWorkers(*workers, &wg, queue)
 
 	// Handle hot config reloads on SIGHUP
-	signals := make(chan os.Signal, 1)
+	signals := make(chan os.Signal, 10)
 	signal.Notify(signals, syscall.SIGUSR1, syscall.SIGUSR2)
 	go handleSignals(signals, *conf, queue)
 
