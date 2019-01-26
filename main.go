@@ -347,8 +347,8 @@ func syncRepo(r repo) error {
 			refspec = append(refspec, gconfig.RefSpec(ref))
 		}
 	} else {
-		refspec = append(refspec, gconfig.RefSpec("refs/heads/*:refs/remotes/heads/*"))
-		refspec = append(refspec, gconfig.RefSpec("refs/tags/*:refs/remotes/tags/*"))
+		refspec = append(refspec, gconfig.RefSpec("refs/heads/*:refs/heads/*"))
+		refspec = append(refspec, gconfig.RefSpec("refs/tags/*:refs/tags/*"))
 	}
 
 	// This is a little silly since if it's up to date it still returns
@@ -678,7 +678,7 @@ func main() {
 	go feedChannel(queue, *oneshot)
 	launchWorkers(*workers, &wg, queue)
 
-	// Handle hot config reloads on SIGHUP
+	// Signal handling
 	signals := make(chan os.Signal, 10)
 	signal.Notify(signals, syscall.SIGUSR1, syscall.SIGUSR2)
 	go handleSignals(signals, *conf, queue)
