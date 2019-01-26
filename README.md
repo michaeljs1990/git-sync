@@ -7,6 +7,8 @@ as well as push to any git, http, https, or ssh repository. Additinally I have a
 some features for populating metadata on cgit repositories that you can turn on if you
 want.
 
+Currently windows is not supported due to the use of syscalls that aren't supported.
+
 ## Features
 
 |Feature                               |Done|Kinda|Planned|Wishful|
