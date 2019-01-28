@@ -1,7 +1,9 @@
 package main
 
 import (
+	"bytes"
 	"context"
+	"encoding/gob"
 	"encoding/json"
 	"errors"
 	"flag"
@@ -508,10 +510,22 @@ func repoWorker(wg *sync.WaitGroup, rc <-chan repo) {
 	}
 }
 
+// Read config makes a copy of the current config so that if the structure
+// is modified by a user signal we don't have race conditions in the goroutines
+// accessing the returned variable.
 func readConfig() Config {
+	var n bytes.Buffer
+	enc := gob.NewEncoder(&n)
+	dec := gob.NewDecoder(&n)
+
+	dupe := Config{}
+
 	configLock.RLock()
 	defer configLock.RUnlock()
-	return globalConf
+
+	enc.Encode(globalConf)
+	dec.Decode(&dupe)
+	return dupe
 }
 
 // Feed the channel all the information that it needs
