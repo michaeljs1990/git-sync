@@ -104,4 +104,5 @@ This will cause it to sync all repositories again that it knows about.
 
 ## Development
 
-You can use nix-shell to setup the environment that I used however using golang 1.11 and up should work fine.
+Only tested with go 1.11
+
