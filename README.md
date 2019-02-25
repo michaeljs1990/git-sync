@@ -28,7 +28,7 @@ Currently windows is not supported due to the use of syscalls that aren't suppor
 |Prometheus metrics                    |X   |     |       |       |
 |Hot config reloading                  |X   |     |       |       |
 |Force syncing without process restart |X   |     |       |       |
-|Add unit tests                        |    |     |X      |       |
+|Add unit tests                        |    |     |       |X      |
 |Add file watching for push repos      |    |     |       |X      |
 |Populate some cgit metadata           |X   |     |       |       |
 
