@@ -1,0 +1,13 @@
+[Unit]
+Description=Git Sync Daemon
+
+[Service]
+Restart=on-failure
+RestartSec=5
+SyslogIdentifier=git-sync
+User=git
+ExecStart=/usr/local/bin/git-sync -config /etc/git-sync.yaml -verbose -workers 10
+
+[Install]
+WantedBy=multi-user.target
+
