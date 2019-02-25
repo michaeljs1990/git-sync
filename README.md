@@ -7,7 +7,9 @@ as well as push to any git, http, https, or ssh repository. Additinally I have a
 some features for populating metadata on cgit repositories that you can turn on if you
 want.
 
-Currently windows is not supported due to the use of syscalls that aren't supported.
+Currently windows is not supported due to the use of syscalls that aren't supported. If
+a windows user comes along who would like to use open a ticket and we can work something
+out.
 
 ## Features
 
@@ -34,8 +36,7 @@ Currently windows is not supported due to the use of syscalls that aren't suppor
 
 ## Config
 
-Here is an example config file. I tried my best to bubble up error messages but for now
-config validation is somewhat limited.
+Here is an example config file. To validate your config you can run `git-sync -validate -config file.yaml`.
 
 ```
 ---
