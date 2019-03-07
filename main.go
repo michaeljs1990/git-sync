@@ -169,7 +169,12 @@ func (r GithubConfig) toRepos(c Config) []repo {
 	}
 
 	ret := []repo{}
-	opt := &github.RepositoryListOptions{Type: repoType}
+	opt := &github.RepositoryListOptions{
+		Type: repoType,
+		ListOptions: github.ListOptions{
+			PerPage: 10000,
+		},
+	}
 	repos, _, _ := client.Repositories.List(context.Background(), r.Username, opt)
 
 	for _, v := range repos {
