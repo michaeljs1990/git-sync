@@ -172,12 +172,27 @@ func (r GithubConfig) toRepos(c Config) []repo {
 	opt := &github.RepositoryListOptions{
 		Type: repoType,
 		ListOptions: github.ListOptions{
-			PerPage: 10000,
+			PerPage: 100,
 		},
 	}
-	repos, _, _ := client.Repositories.List(context.Background(), r.Username, opt)
 
-	for _, v := range repos {
+	var allRepos []*github.Repository
+	for {
+		repos, resp, err := client.Repositories.List(context.Background(), r.Username, opt)
+		if err != nil {
+			log.Error("Error getting github repos: " + err.Error())
+		}
+
+		allRepos = append(allRepos, repos...)
+
+		if resp.NextPage == 0 {
+			break
+		}
+
+		opt.Page = resp.NextPage
+	}
+
+	for _, v := range allRepos {
 		// Pick the type of protocol that we are going to use to clone over if none is
 		// provided we just clone over HTTP. Github also supports SVN clone but adding
 		// support for SVN/Mg is a fairly large change.
