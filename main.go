@@ -703,7 +703,12 @@ func main() {
 
 	// Export prometheus metrics about the service
 	http.Handle("/metrics", promhttp.Handler())
-	go http.ListenAndServe(*prom_addr, nil)
+	go (func() {
+		err := http.ListenAndServe(*prom_addr, nil)
+		if err != nil {
+			log.Fatal(err.Error())
+		}
+	})()
 
 	// Setup everything needed to run this as a daemon or optionally
 	// as a one time service so you can use it in a cron if desired
