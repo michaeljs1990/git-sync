@@ -655,7 +655,8 @@ func main() {
 	workers := flag.Int("workers", 1, "The number of workers trying to update repos")
 	oneshot := flag.Bool("oneshot", false, "Only run the script once and then exit upon completion")
 	validate := flag.Bool("validate", false, "Validate the config file that the user passes to us and then stop")
-	prom_addr := flag.String("prom-listen-address", ":8080", "The address to listen on for HTTP requests.")
+	prom_addr := flag.String("prom-listen-address", ":8080", "The address to listen on for HTTP requests")
+	no_prom := flag.Bool("--disable-prom", false, "I don't like metrics so turn them off.")
 
 	verbose := flag.Bool("verbose", false, "Control the level of logging you would like output")
 	log_file := flag.String("log_file", "", "Set the file to log to by default this just sends data to stdout")
@@ -701,14 +702,16 @@ func main() {
 		os.Exit(0)
 	}
 
-	// Export prometheus metrics about the service
-	http.Handle("/metrics", promhttp.Handler())
-	go (func() {
-		err := http.ListenAndServe(*prom_addr, nil)
-		if err != nil {
-			log.Fatal(err.Error())
-		}
-	})()
+	// Export prometheus metrics about the service if it's not disabled
+	if *no_prom == false {
+		http.Handle("/metrics", promhttp.Handler())
+		go (func() {
+			err := http.ListenAndServe(*prom_addr, nil)
+			if err != nil {
+				log.Fatal(err.Error())
+			}
+		})()
+	}
 
 	// Setup everything needed to run this as a daemon or optionally
 	// as a one time service so you can use it in a cron if desired
