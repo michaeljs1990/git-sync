@@ -68,10 +68,10 @@ var schema = `
                 "type": "string",
                 "title": "The Cgitowner Schema"
               },
-              "description": {
+              "cgitdescription": {
                 "$id": "#/properties/github/items/properties/extras/properties/description",
                 "type": "string",
-                "title": "The Description Schema"
+                "title": "The Cgitdescription Schema"
               }
             }
           },

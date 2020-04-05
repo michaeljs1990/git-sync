@@ -76,7 +76,7 @@ type Extras struct {
 	Username    string `json:"username"`
 	CgitSection string `json:"cgitsection"`
 	CgitOwner   string `json:"cgitowner"`
-	Description string `json:"description"`
+	Description string `json:"cgitdescription"`
 }
 
 // RepoConfig is for adhoc servers that may not live
