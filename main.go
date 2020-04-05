@@ -216,6 +216,7 @@ func (r GithubConfig) toRepos(c Config) []repo {
 			Username:    r.Username,
 			CgitSection: r.Username,
 			CgitOwner:   r.Username,
+			Description: "[read only] github mirror of " + url,
 		}
 
 		// Need to add support here for using different kinds of urls but currently
@@ -472,6 +473,24 @@ func cgitMetadataOperation(r repo) error {
 	if r.Extras != (Extras{}) {
 		config.SetOption("cgit", "", "owner", r.Extras.CgitOwner)
 		config.SetOption("cgit", "", "section", r.Extras.CgitSection)
+
+		if r.Extras.Description != "" {
+			// Write out a description for cgit web interface
+			cgitDescriptionFile, err := os.OpenFile(path.Join(r.Path, "description"), os.O_RDWR|os.O_CREATE, 0644)
+			if err != nil {
+				return errors.New("Unable to read this repos git config file : " + err.Error())
+			}
+
+			_, err = cgitDescriptionFile.Seek(0, 0)
+			if err != nil {
+				return errors.New("Unable to seek to the start of the description file before writing it out : " + err.Error())
+			}
+
+			_, err = cgitDescriptionFile.Write([]byte(r.Extras.Description))
+			if err != nil {
+				return errors.New("Unable to write to description file : " + err.Error())
+			}
+		}
 	}
 
 	encoder := gitconfig.NewEncoder(gitConfigFile)
