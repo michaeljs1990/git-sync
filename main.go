@@ -29,7 +29,7 @@ import (
 	githttp "gopkg.in/src-d/go-git.v4/plumbing/transport/http"
 	gitssh "gopkg.in/src-d/go-git.v4/plumbing/transport/ssh"
 
-	github "github.com/google/go-github/v21/github"
+	github "github.com/google/go-github/github"
 	promhttp "github.com/prometheus/client_golang/prometheus/promhttp"
 	jsonschema "github.com/santhosh-tekuri/jsonschema"
 	log "github.com/sirupsen/logrus"

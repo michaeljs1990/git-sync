@@ -1,0 +1,23 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "dotgit.go",
+        "dotgit_rewrite_packed_refs.go",
+        "dotgit_setref.go",
+        "writers.go",
+    ],
+    importmap = "vendor/gopkg.in/src-d/go-git.v4/storage/filesystem/dotgit",
+    importpath = "",
+    visibility = ["//visibility:public"],
+    deps = [
+        "@in_gopkg_src_d_go_billy_v4//:go_default_library",
+        "@in_gopkg_src_d_go_billy_v4//osfs:go_default_library",
+        "@in_gopkg_src_d_go_git_v4//plumbing:go_default_library",
+        "@in_gopkg_src_d_go_git_v4//plumbing/format/idxfile:go_default_library",
+        "@in_gopkg_src_d_go_git_v4//plumbing/format/objfile:go_default_library",
+        "@in_gopkg_src_d_go_git_v4//plumbing/format/packfile:go_default_library",
+        "@in_gopkg_src_d_go_git_v4//utils/ioutil:go_default_library",
+    ],
+)

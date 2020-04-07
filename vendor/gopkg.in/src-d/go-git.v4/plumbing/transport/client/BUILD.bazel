@@ -1,0 +1,16 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = ["client.go"],
+    importmap = "vendor/gopkg.in/src-d/go-git.v4/plumbing/transport/client",
+    importpath = "",
+    visibility = ["//visibility:public"],
+    deps = [
+        "@in_gopkg_src_d_go_git_v4//plumbing/transport:go_default_library",
+        "@in_gopkg_src_d_go_git_v4//plumbing/transport/file:go_default_library",
+        "@in_gopkg_src_d_go_git_v4//plumbing/transport/git:go_default_library",
+        "@in_gopkg_src_d_go_git_v4//plumbing/transport/http:go_default_library",
+        "@in_gopkg_src_d_go_git_v4//plumbing/transport/ssh:go_default_library",
+    ],
+)

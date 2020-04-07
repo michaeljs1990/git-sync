@@ -1,0 +1,52 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "pageant_windows.go",
+        "sshagent.go",
+        "sshagent_windows.go",
+    ],
+    importmap = "vendor/github.com/xanzy/ssh-agent",
+    importpath = "",
+    visibility = ["//visibility:public"],
+    deps = select({
+        "@io_bazel_rules_go//go/platform:android": [
+            "@org_golang_x_crypto//ssh/agent:go_default_library",
+        ],
+        "@io_bazel_rules_go//go/platform:darwin": [
+            "@org_golang_x_crypto//ssh/agent:go_default_library",
+        ],
+        "@io_bazel_rules_go//go/platform:dragonfly": [
+            "@org_golang_x_crypto//ssh/agent:go_default_library",
+        ],
+        "@io_bazel_rules_go//go/platform:freebsd": [
+            "@org_golang_x_crypto//ssh/agent:go_default_library",
+        ],
+        "@io_bazel_rules_go//go/platform:ios": [
+            "@org_golang_x_crypto//ssh/agent:go_default_library",
+        ],
+        "@io_bazel_rules_go//go/platform:linux": [
+            "@org_golang_x_crypto//ssh/agent:go_default_library",
+        ],
+        "@io_bazel_rules_go//go/platform:nacl": [
+            "@org_golang_x_crypto//ssh/agent:go_default_library",
+        ],
+        "@io_bazel_rules_go//go/platform:netbsd": [
+            "@org_golang_x_crypto//ssh/agent:go_default_library",
+        ],
+        "@io_bazel_rules_go//go/platform:openbsd": [
+            "@org_golang_x_crypto//ssh/agent:go_default_library",
+        ],
+        "@io_bazel_rules_go//go/platform:plan9": [
+            "@org_golang_x_crypto//ssh/agent:go_default_library",
+        ],
+        "@io_bazel_rules_go//go/platform:solaris": [
+            "@org_golang_x_crypto//ssh/agent:go_default_library",
+        ],
+        "@io_bazel_rules_go//go/platform:windows": [
+            "@org_golang_x_crypto//ssh/agent:go_default_library",
+        ],
+        "//conditions:default": [],
+    }),
+)

@@ -1,0 +1,18 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "arraylist.go",
+        "enumerable.go",
+        "iterator.go",
+        "serialization.go",
+    ],
+    importmap = "vendor/github.com/emirpasic/gods/lists/arraylist",
+    importpath = "",
+    visibility = ["//visibility:public"],
+    deps = [
+        "@com_github_emirpasic_gods//containers:go_default_library",
+        "@com_github_emirpasic_gods//lists:go_default_library",
+    ],
+)

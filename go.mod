@@ -1,6 +1,7 @@
 module cgit.xrt0x.com/xrt0x/git-sync
 
 require (
+	github.com/google/go-github v17.0.0+incompatible
 	github.com/google/go-github/v21 v21.0.0
 	github.com/prometheus/client_golang v0.9.2
 	github.com/santhosh-tekuri/jsonschema v1.2.4

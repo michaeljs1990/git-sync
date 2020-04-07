@@ -1,0 +1,20 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "canonical_text.go",
+        "keys.go",
+        "read.go",
+        "write.go",
+    ],
+    importmap = "vendor/golang.org/x/crypto/openpgp",
+    importpath = "",
+    visibility = ["//visibility:public"],
+    deps = [
+        "@org_golang_x_crypto//openpgp/armor:go_default_library",
+        "@org_golang_x_crypto//openpgp/errors:go_default_library",
+        "@org_golang_x_crypto//openpgp/packet:go_default_library",
+        "@org_golang_x_crypto//openpgp/s2k:go_default_library",
+    ],
+)

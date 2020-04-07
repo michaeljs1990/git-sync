@@ -1,0 +1,10 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = ["polyfill.go"],
+    importmap = "vendor/gopkg.in/src-d/go-billy.v4/helper/polyfill",
+    importpath = "",
+    visibility = ["//visibility:public"],
+    deps = ["@in_gopkg_src_d_go_billy_v4//:go_default_library"],
+)

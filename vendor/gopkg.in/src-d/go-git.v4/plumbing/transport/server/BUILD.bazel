@@ -1,0 +1,26 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "loader.go",
+        "server.go",
+    ],
+    importmap = "vendor/gopkg.in/src-d/go-git.v4/plumbing/transport/server",
+    importpath = "",
+    visibility = ["//visibility:public"],
+    deps = [
+        "@in_gopkg_src_d_go_billy_v4//:go_default_library",
+        "@in_gopkg_src_d_go_billy_v4//osfs:go_default_library",
+        "@in_gopkg_src_d_go_git_v4//plumbing:go_default_library",
+        "@in_gopkg_src_d_go_git_v4//plumbing/cache:go_default_library",
+        "@in_gopkg_src_d_go_git_v4//plumbing/format/packfile:go_default_library",
+        "@in_gopkg_src_d_go_git_v4//plumbing/protocol/packp:go_default_library",
+        "@in_gopkg_src_d_go_git_v4//plumbing/protocol/packp/capability:go_default_library",
+        "@in_gopkg_src_d_go_git_v4//plumbing/revlist:go_default_library",
+        "@in_gopkg_src_d_go_git_v4//plumbing/storer:go_default_library",
+        "@in_gopkg_src_d_go_git_v4//plumbing/transport:go_default_library",
+        "@in_gopkg_src_d_go_git_v4//storage/filesystem:go_default_library",
+        "@in_gopkg_src_d_go_git_v4//utils/ioutil:go_default_library",
+    ],
+)

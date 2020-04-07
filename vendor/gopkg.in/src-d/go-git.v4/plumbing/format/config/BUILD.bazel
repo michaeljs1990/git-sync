@@ -1,0 +1,17 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "common.go",
+        "decoder.go",
+        "doc.go",
+        "encoder.go",
+        "option.go",
+        "section.go",
+    ],
+    importmap = "vendor/gopkg.in/src-d/go-git.v4/plumbing/format/config",
+    importpath = "",
+    visibility = ["//visibility:public"],
+    deps = ["@com_github_src_d_gcfg//:go_default_library"],
+)

@@ -1,0 +1,17 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "config.go",
+        "lexer.go",
+        "parser.go",
+        "position.go",
+        "token.go",
+        "validators.go",
+    ],
+    importmap = "vendor/github.com/kevinburke/ssh_config",
+    importpath = "",
+    visibility = ["//visibility:public"],
+    deps = ["@com_github_pelletier_go_buffruneio//:go_default_library"],
+)
