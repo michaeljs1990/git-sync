@@ -1,0 +1,9 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = ["loader.go"],
+    importmap = "cgit.xrt0x.com/xrt0x/git-sync/vendor/github.com/santhosh-tekuri/jsonschema/loader",
+    importpath = "github.com/santhosh-tekuri/jsonschema/loader",
+    visibility = ["//visibility:public"],
+)
