@@ -98,7 +98,7 @@ This will cause it to sync all repositories again that it knows about.
 
 ## Development
 
-Test with golang 1.11 - 1.13
+Test with golang 1.11 - 1.16
 
 ## Feature List
 
