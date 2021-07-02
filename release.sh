@@ -11,15 +11,21 @@ builds=(
 "freebsd_amd64"
 "darwin_amd64")
 
-for arch in "${builds[@]}"; do
-  echo build for $arch
-  echo ===========================================================================
-  bazel build --platforms=@io_bazel_rules_go//go/toolchain:$arch //:git-sync
-done
-
 releases="release/$(git describe --tags)"
 mkdir -p ${releases}
 
 for arch in "${builds[@]}"; do
-  cp -f $(pwd)/bazel-bin/${arch}_pure_stripped/git-sync $(pwd)/${releases}/git-sync_$arch
+  echo build for $arch
+  echo ===========================================================================
+
+  bazel build \
+    --@io_bazel_rules_go//go/config:static \
+    --platform_suffix=_$arch \
+    --platforms=@io_bazel_rules_go//go/toolchain:$arch \
+    //:git-sync
+
+  # Not sure how to fix but bazel decided to change this path to something stupid instead of providing
+  # an easy way to find builds for different platforms.
+  cp -f $(pwd)/bazel-out/darwin-fastbuild_$arch-*/bin/git-sync_/git-sync $(pwd)/${releases}/git-sync_$arch
 done
+
