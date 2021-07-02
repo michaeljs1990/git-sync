@@ -22,12 +22,12 @@ import (
 	// Sorry the naming here got kinda bad of note gconfig is for configuration
 	// of what branches and refs you want to push. gitconfig is for playing with
 	// the actual git config file.
-	git "gopkg.in/src-d/go-git.v4"
-	gconfig "gopkg.in/src-d/go-git.v4/config"
-	gitconfig "gopkg.in/src-d/go-git.v4/plumbing/format/config"
-	gittrans "gopkg.in/src-d/go-git.v4/plumbing/transport"
-	githttp "gopkg.in/src-d/go-git.v4/plumbing/transport/http"
-	gitssh "gopkg.in/src-d/go-git.v4/plumbing/transport/ssh"
+	git "github.com/go-git/go-git/v5"
+	gconfig "github.com/go-git/go-git/v5/config"
+	gitconfig "github.com/go-git/go-git/v5/plumbing/format/config"
+	gittrans "github.com/go-git/go-git/v5/plumbing/transport"
+	githttp "github.com/go-git/go-git/v5/plumbing/transport/http"
+	gitssh "github.com/go-git/go-git/v5/plumbing/transport/ssh"
 
 	github "github.com/google/go-github/github"
 	promhttp "github.com/prometheus/client_golang/prometheus/promhttp"
