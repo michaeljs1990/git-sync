@@ -1,9 +1,0 @@
-load("@io_bazel_rules_go//go:def.bzl", "go_library")
-
-go_library(
-    name = "go_default_library",
-    srcs = ["formats.go"],
-    importmap = "cgit.xrt0x.com/xrt0x/git-sync/vendor/github.com/santhosh-tekuri/jsonschema/formats",
-    importpath = "github.com/santhosh-tekuri/jsonschema/formats",
-    visibility = ["//visibility:public"],
-)
